@@ -53,8 +53,11 @@ from sklearn.metrics import mean_absolute_error, r2_score
 # FEATURE ENGINEERING ---
 # Convert 'Location' into numeric columns (One-Hot Encoding)
 # We use Bedroom, bathroom, and Location as our deterministic factors
+# --- 1. LOG TRANSFORMATION ---
+# We transform the price to handle skewness in the Nairobi market
+import numpy as np
 X = pd.get_dummies(df[['Bedroom', 'bathroom', 'Location']], drop_first=True)
-y = df['Price']
+y = np.log(df['Price'])
 
 # DATA SPLITTING ---
 # We keep 20% of the data aside to test the model's accuracy
@@ -65,11 +68,17 @@ model = LinearRegression()
 model.fit(X_train, y_train)
 
 # MODEL EVALUATION ---
-predictions = model.predict(X_test)
-mae = mean_absolute_error(y_test, predictions)
-r2 = r2_score(y_test, predictions)
+predictions_log = model.predict(X_test)
 
-print(f"\n--- Model Performance ---")
+# Use np.exp() to turn log-predictions back into real KES
+predictions = np.exp(predictions_log)
+actual_prices = np.exp(y_test)
+
+# Calculate error based on real Shillings
+mae = mean_absolute_error(actual_prices, predictions)
+r2 = r2_score(y_test, predictions_log) # R2 is usually calculated on the trained scale
+
+print(f"\n--- Model Performance (Refined) ---")
 print(f"Average Error (MAE): KES {mae:,.0f}")
 print(f"R-Squared Score: {r2:.2f}")
 
@@ -104,3 +113,13 @@ def predict_my_house(beds, baths, location):
 # Example Test: 4 Bedroom, 4 Bathroom in Runda
 est_price = predict_my_house(4, 4, 'Runda')
 print(f"\nEstimated Price for 4BR in Runda: KES {est_price:,.0f}")
+
+# visualization for GitHub documentation
+plt.figure(figsize=(10, 6))
+sns.regplot(x=y_test, y=predictions, scatter_kws={'alpha':0.5})
+plt.title('Actual vs. Predicted Nairobi House Prices')
+plt.xlabel('Actual Price (KES)')
+plt.ylabel('Predicted Price (KES)')
+plt.savefig('model_accuracy_plot.png')
+# Instead of printing 'est_price', print the exponent of the result
+print(f"Estimated Price for 4BR in Runda: KES {np.exp(est_price):,.0f}")
