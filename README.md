@@ -11,3 +11,6 @@ This project uses Multiple Linear Regression to analyze and predict property pri
 ## Technical Implementation 
 * **Cleaning:** Robust regex cleaning to handle currency strings and space-separated thousands. 
 * **Preprocessing:** One-Hot Encoding for categorical neighborhood data and median imputation for missing values. 
+ 
+## Visualizing Accuracy 
+![Model Accuracy Plot](model_accuracy_plot.png) 
